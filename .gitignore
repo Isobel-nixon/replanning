@@ -1,0 +1,7 @@
+/build/
+/GPATH
+/GRTAGS
+/GTAGS
+*.d
+*.o
+*~
