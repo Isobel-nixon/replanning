@@ -42,7 +42,7 @@ bool Agent_PF::check_sat(ctx_t& ctx) {
 
   int Tub = cost.ub(ctx);
   int pathC = coord.sipp_pf.search(start_pos, goal_pos,
-                                   check_ctx, f_heur, coord.res_table.reserved);
+                                   check_ctx, f_heur, coord.res_table.reserved) + delay;
   return pathC <= Tub;
 }
 

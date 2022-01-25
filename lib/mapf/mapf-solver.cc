@@ -4,6 +4,7 @@
 #include <lazycbs/mapf/mapf-solver.h>
 #include <lazycbs/mapf/instance.h>
 #include <lazycbs/pf/pf.hpp>
+#include <iostream>
 
 // #define DEBUG_UC
 // #define MAPF_NO_RECTANGLES
@@ -43,9 +44,10 @@ MAPF_Solver::MAPF_Solver(const Map& ml, const Agents& al, int UB)
     for(int ai = 0; ai < num_of_agents; ++ai) {
       int init_loc = _nav::find_coord(nav_coords, al[ai].origin.first, al[ai].origin.second);
       int goal_loc = _nav::find_coord(nav_coords, al[ai].goal.first, al[ai].goal.second);
+      int delay_length = al[ai].delay;
 
       geas::intvar cv(s.new_intvar(0, UB));
-      Agent_PF* pf(new Agent_PF(s.data, coord, cv, init_loc, goal_loc));
+      Agent_PF* pf(new Agent_PF(s.data, coord, cv, init_loc, goal_loc, delay_length));
       pathfinders.push(pf);
 
       cost_lb += pf->pathCost();
@@ -53,6 +55,43 @@ MAPF_Solver::MAPF_Solver(const Map& ml, const Agents& al, int UB)
       penalties.push(penalty { cv.p, geas::from_int(pf->pathCost()) });
     }
 }
+
+// void add_delay(int agent, int delayed_length, int loc){
+//     /*Delays will always occur at the starting location, as we cannot predict delays at this point*/
+//     new_conflicts.push(conflict(t, ai, aj, pf::M_WAIT, loc));
+//     pf::Move move = pf::M_WAIT;
+//     // Normalize. This should work fine for
+//     // M_WAIT (vertex) constraints too.
+//     if(loc > coord.nav.inv[loc][move]) {
+//       loc = coord.nav.inv[loc][move];
+//       move = pf::move_inv(move);
+//     }
+      
+//     cons_key k { new_conflict.timestamp, move, loc };
+//     auto it(cons_map.find(k));
+    
+//     int idx;
+//     if(it != cons_map.end()) {
+//       idx = (*it).second;
+//     } else {
+//       idx = constraints.size();
+//       cons_map.insert(std::make_pair(k, idx));
+//       constraints.push(cons_data { s.new_intvar(0, pathfinders.size()-1), btset::bitset(pathfinders.size()) });
+//     }
+
+//     int a1(new_conflict.a1);
+//     int a2(new_conflict.a2);
+//     cons_data& c(constraints[idx]);
+//     if(!c.attached.elem(a1)) {
+//       patom_t at(c.sel != a1);
+//       while(s.level() > 0 && at.lb(s.data->ctx()))
+//         s.backtrack();
+//       pathfinders[a1]->register_obstacle(at, k.timestamp, k.move, k.loc);
+//       if(k.loc == pathfinders[a1]->goal_pos)
+//         add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
+//       c.attached.insert(a1);
+//     }
+// }
 
 bool apply_penalties(MAPF_Solver& mf) {
    for(MAPF_Solver::penalty& p : mf.penalties)  {
@@ -211,12 +250,13 @@ void MAPF_Solver::printPaths(FILE* f) const {
   for(int ai = 0; ai < pathfinders.size(); ++ai) {
     assert(ai == pathfinders[ai]->agent_id);
     int loc = coord.plans[ai].origin;
+    int delay = pathfinders[ai]->delay;
     fprintf(f, "\"A%d\": [%d", ai, 0);
     for(pf::Step step : coord.get_path(ai)) {
       // fprintf(f, " %d", loc);
 
       loc = coord.nav.delta[loc][step.second];
-      fprintf(f, ", %d", step.first);
+      fprintf(f, ", %d", step.first + delay);
     }
     fprintf(f, "]");
     if(ai + 1 < pathfinders.size()){
@@ -527,12 +567,12 @@ void print_agent_path(MAPF_Solver& m, int ai) {
   for(pf::Step step : m.coord.get_path(ai)) {
     // fprintf(f, " %d", loc);
     loc = m.coord.nav.delta[loc][step.second];
-    fprintf(stdout, " %d:(%d,%d)", step.first, m.row_of(loc), m.col_of(loc));
   }
   fprintf(stdout, "\n");
 }
 
 bool MAPF_Solver::checkForConflicts(void) {
+  printPaths(stdout);
   coord.reset();
   int pMax = maxPathLength();
   
@@ -545,14 +585,15 @@ bool MAPF_Solver::checkForConflicts(void) {
   int Tnext = INT_MAX;
   agent_set.sz = 0;
   for(int ai = 0; ai < pathfinders.size(); ++ai) {
+    // checks for each agent that no agent has the same starting position, plus some initial setup
     const pf::Path& path(coord.get_path(ai));
     auto it = path.begin();
     auto en = path.end();
-    path_it.push(it);
+    path_it.push(it); //Step (time, move) for first location (not start)
     path_en.push(en);
 
     int loc = coord.plans[ai].origin;
-    curr_loc.push(loc);
+    curr_loc.push(loc); // location of origin
     prev_loc.push(loc);
 
     if(!coord.is_active(ai))
@@ -560,6 +601,7 @@ bool MAPF_Solver::checkForConflicts(void) {
     agent_set.insert(ai);
     if(it != en)
       Tnext = std::min(Tnext, it->first);
+      // std::cout << row_of(loc) << ", " << col_of(loc)<< std::endl;
     assert(nmap[loc] < 0); // Shouldn't be any conflicts at t0.
     nmap[loc] = ai;
   }
@@ -567,9 +609,9 @@ bool MAPF_Solver::checkForConflicts(void) {
   // All agents are interesting.
   // agent_set.sz = pathfinders.size();
 
-  while(Tnext < INT_MAX) {
-    int t = Tnext;
-    Tnext = INT_MAX;
+  while(Tnext < INT_MAX) {  //Tnext currently holds the minimum starting time 
+    int t = Tnext;          // t holds the minimum starting time
+    Tnext = INT_MAX;        // reset Tnext so we can break out of the loop
 
     std::swap(prev_loc, curr_loc);
     std::swap(cmap, nmap);
@@ -577,17 +619,17 @@ bool MAPF_Solver::checkForConflicts(void) {
     // for(int ai = 0; ai < pathfinders.size(); ++ai) {
     for(int ai : agent_set.rev()) {
       int loc;
-      if(path_it[ai] != path_en[ai] && path_it[ai]->first == t) {
-        loc = nav.delta[prev_loc[ai]][path_it[ai]->second];
-        ++path_it[ai];
+      if(path_it[ai] != path_en[ai] && path_it[ai]->first == t) { // if agent isn't at it's goal and it's time for it to move to the next location
+        loc = nav.delta[prev_loc[ai]][path_it[ai]->second];   // location is prev location + movement
+        ++path_it[ai];  
       } else {
         loc = prev_loc[ai];
       }
       if(path_it[ai] != path_en[ai])
-        Tnext = std::min(Tnext, path_it[ai]->first);
+        Tnext = std::min(Tnext, path_it[ai]->first);  // Tnext is minimum time all agent goes to next location (if any, i guess this would stay at INT_MAX if all agents are at the goal)
       curr_loc[ai] = loc;
       
-      if(nmap[loc] >= 0) {
+      if(nmap[loc] >= 0) {  // there is already an agent at that location? vertex conflict!
         int aj(nmap[loc]);
         assert(aj != ai);
 
@@ -964,8 +1006,10 @@ geas::patom_t MAPF_Solver::getBarrier(int ai, int t, std::pair<int, int> coord, 
 bool MAPF_Solver::addConflict(void) {
   HL_conflicts++;
   for(auto new_conflict : new_conflicts) {
+
     if(new_conflict.type == C_BARRIER) {
       const barrier_info& b = new_conflict.b;
+      
 #ifdef MAPF_USE_TARGETS
       if(b.dir_h == pf::M_WAIT) { // Actually a target conflict.
         int ai = new_conflict.a1;
@@ -1096,8 +1140,49 @@ bool MAPF_Solver::addConflict(void) {
         */
 #endif
     } else {
+      // if conflict is at source location for either agent only that agent can be at that location prior to its delay
       int loc = new_conflict.p.loc;
       pf::Move move = new_conflict.p.move;
+      if(coord.plans[new_conflict.a1].origin == loc|| coord.plans[new_conflict.a2].origin == loc){
+        int a1;
+        int a2;
+        if (coord.plans[new_conflict.a1].origin == loc){
+          int a1(new_conflict.a1);
+          int a2(new_conflict.a2);
+        }else{
+          int a1(new_conflict.a2);
+          int a2(new_conflict.a1);
+        } 
+        if(loc > coord.nav.inv[loc][move]) {
+          loc = coord.nav.inv[loc][move];
+          move = pf::move_inv(move);
+        }
+        for(int t = new_conflict.timestamp; t < pathfinders[a1]->delay; t++){
+          cons_key k {t, move, loc };
+          auto it(cons_map.find(k));
+          
+          int idx;
+          if(it != cons_map.end()) {
+            idx = (*it).second;
+          } else {
+            idx = constraints.size();
+            cons_map.insert(std::make_pair(k, idx));
+            constraints.push(cons_data { s.new_intvar(0, pathfinders.size()-1), btset::bitset(pathfinders.size()) });
+          }
+          cons_data& c(constraints[idx]);
+          if(!c.attached.elem(a1)) {
+            patom_t at(c.sel != a1);
+            while(s.level() > 0 && at.lb(s.data->ctx()))
+              s.backtrack();
+            pathfinders[a1]->register_obstacle(at, k.timestamp, k.move, k.loc);
+            if(k.loc == pathfinders[a1]->goal_pos)
+              add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
+            c.attached.insert(a1);
+
+          }
+        }
+      }
+
       // Normalize. This should work fine for
       // M_WAIT (vertex) constraints too.
       if(loc > coord.nav.inv[loc][move]) {

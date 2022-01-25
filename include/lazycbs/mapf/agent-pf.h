@@ -456,7 +456,7 @@ class Agent_PF : public propagator, public prop_inst<Agent_PF> {
 
 
 public:
- Agent_PF(solver_data* s, coordinator& _coord, intvar _cost, int start_location, int goal_location)
+ Agent_PF(solver_data* s, coordinator& _coord, intvar _cost, int start_location, int goal_location, int _delay)
     : propagator(s)
     , coord(_coord)
     // , active_obstacles(map_size)
@@ -469,13 +469,16 @@ public:
     , r_heur(coord.nav.rev_heuristic(start_location))
     , reasons(coord.nav.size())
     , goal_min(0)
+    , delay(_delay)
     {
     cost.attach(E_UB, watch<&P::wake_cost>(0, Wt_IDEM));
     //cost.attach(E_LB, watch<&P::wake_cost_lb>(0, Wt_IDEM));
     int pathC = coord.sipp_pf.search(start_pos, goal_pos,
-                                     sctx, f_heur, coord.res_table.reserved);
+                                     sctx, f_heur, coord.res_table.reserved) + delay;
     if(pathC == INT_MAX)
       throw RootFail();
+
+    coord.sipp_pf.offset_path(delay);
     agent_id = coord.add_agent(start_pos, coord.sipp_pf.path);
 
     if(cost.lb(s) < pathC) {
@@ -518,7 +521,7 @@ public:
 
   int register_target(int loc, geas::intvar time, int threshold) {
     int ti = targets.size();
-    targets.push(target_info { loc, time, threshold });
+    targets.push(target_info { loc, time + delay, threshold });
     target_map.insert(std::make_pair(loc, ti));
     time.attach(E_UB, watch<&P::wake_target>(ti, Wt_IDEM));
     return ti;
@@ -530,8 +533,9 @@ public:
     assert(threshold > targets[ti].threshold);
     targets[ti].threshold = threshold;
   }
-  int register_obstacle(patom_t at, int timestep, pf::Move move, int loc) {
+  int register_obstacle(patom_t at, int _timestep, pf::Move move, int loc) {
     int ci(obstacles.size());
+    int timestep(_timestep + delay);
     // Add the new constraint to the pool
     obstacles.push(obstacle_info(at, timestep, loc, move));
     make_reason_cell(loc, timestep);
@@ -547,7 +551,7 @@ public:
     int bi(barriers.size()); 
     barriers.push(barrier_info(at));
     for(auto c : constraints) {
-      make_reason_cell(c.loc, c.time);
+      make_reason_cell(c.loc, c.time + delay);
       barriers[bi].constraints.push(c);
     }
     attach(s, at, watch<&P::wake_barrier>(bi, Wt_IDEM));
@@ -633,7 +637,7 @@ public:
   }
 
   // double pathCost(void) const { return has_bypass ? bypass_path.size()-1 : history[hist_pos].cost; }
-  inline double pathCost(void) const { return pf::path_cost(coord.get_path(agent_id)); }
+  inline double pathCost(void) const { return pf::path_cost(coord.get_path(agent_id)) + delay; }
 
   int agent_id;
   
@@ -643,6 +647,8 @@ public:
   intvar cost;
 
   int goal_min;
+
+  int delay;
 
   vec<obstacle_info> obstacles; // The registered obstacles, and other kinds of constraints
   vec<barrier_info> barriers;

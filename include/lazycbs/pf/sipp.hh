@@ -132,6 +132,14 @@ struct sipp_pathfinder {
   // Parameters
   const navigation& nav;
   IntrusiveHeap<IntId, sipp_env> heap;
+  
+  
+  void offset_path(int delay){
+  for(pf::Step step : path){
+      step.first = step.first + delay;
+  }
+}
+
 
   // Recording the incumbent path in terms of
   // (timestep, location).

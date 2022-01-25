@@ -22,10 +22,11 @@ struct Agents {
   typedef std::pair<int, int> coord;
 
   struct agent {
-    agent(int rs, int cs, int re, int ce)
-    : origin(std::make_pair(rs, cs)), goal(std::make_pair(re, ce)) { }
+    agent(int rs, int cs, int re, int ce, int d)
+    : origin(std::make_pair(rs, cs)), goal(std::make_pair(re, ce)), delay(d) { }
     coord origin;
     coord goal;
+    int delay;
   };
 
   agent operator[](int ai) const { return agents[ai]; }
@@ -40,6 +41,8 @@ Map load_movingai_map(std::string fname);
 
 Agents load_ecbs_scenario(std::string fname);
 Agents load_movingai_scenario(std::string fname, int upto);
+
+Agents load_delay_file(std::string fname, int upto, Agents al);
 
 }
 #endif

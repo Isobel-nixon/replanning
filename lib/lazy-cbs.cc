@@ -38,7 +38,7 @@ using namespace std;
 int main(int argc, char** argv) {
 
   // Reading arguments ----------------------------------------------------------------
-  string map_fname, agents_fname;
+  string map_fname, agents_fname, delays_fname;
   /* double w_hwy = 1.0 , w_focal = 1.0 */;
   int time_limit;  // random restarts iterations number
   int agents_upto;
@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
       ("help", "Print help messages")
       ("map", value<string>(&map_fname)->required(), "Map filename")
       ("agents", value<string>(&agents_fname)->required(), "Agents filename")
+      // ("delays", value<string>(&delays_fname)->required(), "Delays filename")
       ("upto", value<int>(&agents_upto)->default_value(INT_MAX), "Number of agents to read (expects movingai format).")
       ("makespan", value<bool>(&opt_makespan)->default_value(false), "Optimize makespan, rather than cost (Default false)")
       ("time_limit",value<int>(&time_limit)->default_value(300), "Time limit cutoff [seconds]")
@@ -88,6 +89,8 @@ int main(int argc, char** argv) {
   mapf::Agents al(agents_upto < INT_MAX
                 ? mapf::load_movingai_scenario(agents_fname, agents_upto)
                 : mapf::load_ecbs_scenario(agents_fname));
+
+  // mapf::load_delay_file(delays_fname, agents_upto, al);
 
   mapf::MAPF_Solver mapf(ml, al, 1e8);
   // mapf.printPaths(stdout);

@@ -105,7 +105,7 @@ Agents load_ecbs_scenario(std::string fname) {
       int cs = atoi ( (*c_beg).c_str() ); c_beg++;
       int re = atoi ( (*c_beg).c_str() ); c_beg++;
       int ce = atoi ( (*c_beg).c_str() ); 
-      al.push(Agents::agent(rs, cs, re, ce));
+      al.push(Agents::agent(rs, cs, re, ce, 0));
     }
     myfile.close();
   }
@@ -140,8 +140,10 @@ Agents load_movingai_scenario(std::string fname, int upto) {
       int r_s = atoi((*c_beg).c_str())+1; ++c_beg;
       int c_e = atoi((*c_beg).c_str())+1; ++c_beg;
       int r_e = atoi((*c_beg).c_str())+1; ++c_beg;
+      ++c_beg;
+      int d = atoi((*c_beg).c_str()); ++c_beg;
 
-      al.push(Agents::agent(r_s, c_s, r_e, c_e));
+      al.push(Agents::agent(r_s, c_s, r_e, c_e, d));
     }
     myfile.close();
   }
