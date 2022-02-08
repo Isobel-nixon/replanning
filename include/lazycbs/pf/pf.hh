@@ -10,7 +10,7 @@
 namespace mapf {
 
 struct pf {
-  enum Move {
+  enum  Move {
     M_RIGHT = 0,
     M_LEFT = 1,
     M_DOWN = 2,

@@ -6,7 +6,7 @@
 #include <lazycbs/pf/pf.hpp>
 #include <iostream>
 
-// #define DEBUG_UC
+// #define DEBUG_UC = true;
 // #define MAPF_NO_RECTANGLES
 // #define MAPF_USE_TARGETS
 
@@ -388,7 +388,7 @@ std::pair<int, pf::Step*> MAPF_Solver::monotoneSubchainEnd(pf::Move dy, pf::Move
 
   unsigned dir_mask = (1 << dx) | (1 << dy);
 
-  auto it = pf::find_step(path, t);
+  auto it = pf::find_step(path, t - pathfinders[ai]->delay);
   auto en = path.end();
   assert(it->first + pathfinders[ai]->delay == t);
 
@@ -494,6 +494,7 @@ struct ptr_rev_iter {
 template<class V>
 ptr_rev_iter<V> ptr_rev(V* ptr) { return ptr_rev_iter<V>(ptr); }
 
+
 template<class It, class F>
 vec<Agent_PF::constraint> extract_barrier(const MAPF_Solver& m, int t0, int c0, int len, It b, It e, F loc_coord) {
   int tEnd = t0 + len;
@@ -572,7 +573,7 @@ void print_agent_path(MAPF_Solver& m, int ai) {
 }
 
 bool MAPF_Solver::checkForConflicts(void) {
-  printPaths(stdout);
+  // printPaths(stdout);
   coord.reset();
   int pMax = maxPathLength();
   
@@ -1144,45 +1145,45 @@ bool MAPF_Solver::addConflict(void) {
     //   // if conflict is at source location for either agent only that agent can be at that location prior to its delay
       int loc = new_conflict.p.loc;
       pf::Move move = new_conflict.p.move;
-    //   if(coord.plans[new_conflict.a1].origin == loc|| coord.plans[new_conflict.a2].origin == loc){
-    //     int a1;
-    //     int a2;
-    //     if (coord.plans[new_conflict.a1].origin == loc){
-    //       int a1(new_conflict.a1);
-    //       int a2(new_conflict.a2);
-    //     }else{
-    //       int a1(new_conflict.a2);
-    //       int a2(new_conflict.a1);
-    //     } 
-    //     if(loc > coord.nav.inv[loc][move]) {
-    //       loc = coord.nav.inv[loc][move];
-    //       move = pf::move_inv(move);
-    //     }
-    //     for(int t = new_conflict.timestamp; t < pathfinders[a1]->delay; t++){
-    //       cons_key k {t, move, loc };
-    //       auto it(cons_map.find(k));
+      // if(coord.plans[new_conflict.a1].origin == loc|| coord.plans[new_conflict.a2].origin == loc){
+      //   int a1;
+      //   int a2;
+      //   if (coord.plans[new_conflict.a1].origin == loc){
+      //     int a1(new_conflict.a1);
+      //     int a2(new_conflict.a2);
+      //   }else{
+      //     int a1(new_conflict.a2);
+      //     int a2(new_conflict.a1);
+      //   } 
+      //   if(loc > coord.nav.inv[loc][move]) {
+      //     loc = coord.nav.inv[loc][move];
+      //     move = pf::move_inv(move);
+      //   }
+      //   for(int t = new_conflict.timestamp; t < pathfinders[a1]->delay; t++){
+      //     cons_key k {t, move, loc };
+      //     auto it(cons_map.find(k));
           
-    //       int idx;
-    //       if(it != cons_map.end()) {
-    //         idx = (*it).second;
-    //       } else {
-    //         idx = constraints.size();
-    //         cons_map.insert(std::make_pair(k, idx));
-    //         constraints.push(cons_data { s.new_intvar(0, pathfinders.size()-1), btset::bitset(pathfinders.size()) });
-    //       }
-    //       cons_data& c(constraints[idx]);
-    //       if(!c.attached.elem(a1)) {
-    //         patom_t at(c.sel != a1);
-    //         while(s.level() > 0 && at.lb(s.data->ctx()))
-    //           s.backtrack();
-    //         pathfinders[a1]->register_obstacle(at, k.timestamp, k.move, k.loc);
-    //         if(k.loc == pathfinders[a1]->goal_pos)
-    //           add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
-    //         c.attached.insert(a1);
+      //     int idx;
+      //     if(it != cons_map.end()) {
+      //       idx = (*it).second;
+      //     } else {
+      //       idx = constraints.size();
+      //       cons_map.insert(std::make_pair(k, idx));
+      //       constraints.push(cons_data { s.new_intvar(0, pathfinders.size()-1), btset::bitset(pathfinders.size()) });
+      //     }
+      //     cons_data& c(constraints[idx]);
+      //     if(!c.attached.elem(a1)) {
+      //       patom_t at(c.sel != a1);
+      //       while(s.level() > 0 && at.lb(s.data->ctx()))
+      //         s.backtrack();
+      //       pathfinders[a1]->register_obstacle(at, k.timestamp, k.move, k.loc);
+      //       if(k.loc == pathfinders[a1]->goal_pos)
+      //         add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
+      //       c.attached.insert(a1);
 
-    //       }
-    //     }
-    //   }
+      //     }
+      //   }
+      // }
 
       // Normalize. This should work fine for
       // M_WAIT (vertex) constraints too.
@@ -1210,31 +1211,43 @@ bool MAPF_Solver::addConflict(void) {
         patom_t at(c.sel != a1);
         while(s.level() > 0 && at.lb(s.data->ctx()))
           s.backtrack();
-        std::cout << k.timestamp - pathfinders[a1] -> delay << std::endl;
-        if(k.timestamp - pathfinders[a1] -> delay > 0){
-          
-          pathfinders[a1]->register_obstacle(at, k.timestamp - pathfinders[a2] -> delay, k.move, k.loc);
+        // std::cout << k.timestamp - pathfinders[a1] -> delay << std::endl;
+        // if(k.timestamp - pathfinders[a1] -> delay > 0){
+        //   pathfinders[a1]->register_obstacle(at, k.timestamp, k.move, k.loc);
+        // }
+        // std::cout <<
+
+        // if(k.timestamp - pathfinders[a1]-> delay > 0){
+        if(true){
+          std::cout << a1 << ", " << k.timestamp << "," << k.move << ", " <<  k.loc << std::endl; 
+          std::cout << k.timestamp - pathfinders[a1] -> delay << std::endl;
+          pathfinders[a1]->register_obstacle(at, k.timestamp - pathfinders[a1] -> delay, k.move, k.loc);
+          if(k.loc == pathfinders[a1]->goal_pos)
+            add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
+          c.attached.insert(a1);
         }
-        if(k.loc == pathfinders[a1]->goal_pos)
-          add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp - pathfinders[a1] -> delay);
-        c.attached.insert(a1);
       }
       if(!c.attached.elem(a2)) {
         patom_t at(c.sel != a2);
         while(s.level() > 0 && at.lb(s.data->ctx()))
           s.backtrack();
-        std::cout << k.timestamp - pathfinders[a2] -> delay << std::endl;
-        if(k.timestamp - pathfinders[a2] -> delay > 0){
-          pathfinders[a2]->register_obstacle(at, k.timestamp - pathfinders[a1] -> delay, k.move, k.loc);
+        // std::cout << k.timestamp - pathfinders[a2] -> delay << std::endl;
+        // if(k.timestamp - pathfinders[a2] -> delay > 0){
+        //   pathfinders[a2]->register_obstacle(at, k.timestamp, k.move, k.loc);
+        // }
+        // if(k.timestamp - pathfinders[a2]-> delay > 0){
+        if(true){
+          std::cout << a2 << ", " << k.timestamp << "," << k.move << ", " <<  k.loc << std::endl;
+          std::cout << k.timestamp - pathfinders[a2] -> delay << std::endl;
+          pathfinders[a2]->register_obstacle(at, k.timestamp - pathfinders[a2] -> delay, k.move, k.loc);
+          if(k.loc == pathfinders[a2]->goal_pos)
+            add_clause(s.data, ~at, pathfinders[a2]->cost > k.timestamp);
+          c.attached.insert(a2);
         }
-        
-        if(k.loc == pathfinders[a2]->goal_pos)
-          add_clause(s.data, ~at, pathfinders[a2]->cost > k.timestamp - pathfinders[a2] -> delay);
-        c.attached.insert(a2);
       }
       // FIXME: Abstract properly
       //s.data->confl.pred_saved[c.sel.p>>1].val = geas::from_int((rand() % 2 ? a1 : a2));
-    }
+     }
   }
   new_conflicts.clear();
   return true;

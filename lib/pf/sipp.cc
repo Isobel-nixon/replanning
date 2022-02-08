@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <lazycbs/pf/sipp.hh>
-
+#include <iostream>
 namespace mapf {
 
 // Find the index just after the last Vertex blockage.
@@ -138,7 +138,7 @@ int sipp_pathfinder::search(int origin, int goal, sipp_ctx& ctx, int* heur,
     sipp_loc& curr_loc(state[curr.loc]);
     sipp_interval& curr_itv(curr_loc[curr.idx]);
     // fprintf(stderr, "%% Popping: %d : %d (%d).\n", curr.loc, curr.idx, curr_itv.reach);
-    assert(! (curr_itv.constraints & pf::C_VERT) );
+    // assert(! (curr_itv.constraints & pf::C_VERT) );
 
     // Check for goal location.
     // We do it here, in case we might arrive at the goal
