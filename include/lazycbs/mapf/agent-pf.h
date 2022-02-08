@@ -521,7 +521,7 @@ public:
 
   int register_target(int loc, geas::intvar time, int threshold) {
     int ti = targets.size();
-    targets.push(target_info { loc, time + delay, threshold });
+    targets.push(target_info { loc, time, threshold });
     target_map.insert(std::make_pair(loc, ti));
     time.attach(E_UB, watch<&P::wake_target>(ti, Wt_IDEM));
     return ti;
@@ -535,7 +535,7 @@ public:
   }
   int register_obstacle(patom_t at, int _timestep, pf::Move move, int loc) {
     int ci(obstacles.size());
-    int timestep(_timestep + delay);
+    int timestep(_timestep);
     // Add the new constraint to the pool
     obstacles.push(obstacle_info(at, timestep, loc, move));
     make_reason_cell(loc, timestep);
@@ -551,7 +551,7 @@ public:
     int bi(barriers.size()); 
     barriers.push(barrier_info(at));
     for(auto c : constraints) {
-      make_reason_cell(c.loc, c.time + delay);
+      make_reason_cell(c.loc, c.time);
       barriers[bi].constraints.push(c);
     }
     attach(s, at, watch<&P::wake_barrier>(bi, Wt_IDEM));
