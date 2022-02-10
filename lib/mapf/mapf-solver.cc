@@ -6,7 +6,7 @@
 #include <lazycbs/pf/pf.hpp>
 #include <iostream>
 
-// #define DEBUG_UC = true;
+#define DEBUG_UC = true;
 // #define MAPF_NO_RECTANGLES
 // #define MAPF_USE_TARGETS
 
@@ -1217,13 +1217,14 @@ bool MAPF_Solver::addConflict(void) {
         // }
         // std::cout <<
 
-        // if(k.timestamp - pathfinders[a1]-> delay > 0){
-        if(true){
+        if(k.timestamp - pathfinders[a1]-> delay > 0){
+        // if(true){
           std::cout << a1 << ", " << k.timestamp << "," << k.move << ", " <<  k.loc << std::endl; 
           std::cout << k.timestamp - pathfinders[a1] -> delay << std::endl;
+
           pathfinders[a1]->register_obstacle(at, k.timestamp - pathfinders[a1] -> delay, k.move, k.loc);
           if(k.loc == pathfinders[a1]->goal_pos)
-            add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp);
+            add_clause(s.data, ~at, pathfinders[a1]->cost > k.timestamp - pathfinders[a1] -> delay);
           c.attached.insert(a1);
         }
       }
@@ -1235,13 +1236,13 @@ bool MAPF_Solver::addConflict(void) {
         // if(k.timestamp - pathfinders[a2] -> delay > 0){
         //   pathfinders[a2]->register_obstacle(at, k.timestamp, k.move, k.loc);
         // }
-        // if(k.timestamp - pathfinders[a2]-> delay > 0){
-        if(true){
+        if(k.timestamp - pathfinders[a2]-> delay > 0){
+        // if(true){
           std::cout << a2 << ", " << k.timestamp << "," << k.move << ", " <<  k.loc << std::endl;
           std::cout << k.timestamp - pathfinders[a2] -> delay << std::endl;
           pathfinders[a2]->register_obstacle(at, k.timestamp - pathfinders[a2] -> delay, k.move, k.loc);
           if(k.loc == pathfinders[a2]->goal_pos)
-            add_clause(s.data, ~at, pathfinders[a2]->cost > k.timestamp);
+            add_clause(s.data, ~at, pathfinders[a2]->cost > k.timestamp - pathfinders[a2] -> delay);
           c.attached.insert(a2);
         }
       }
