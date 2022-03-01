@@ -1,0 +1,3 @@
+/mnt/w/Users/nixon/CBSH2-RTC/CMakeFiles/rebuild_cache.dir
+/mnt/w/Users/nixon/CBSH2-RTC/CMakeFiles/edit_cache.dir
+/mnt/w/Users/nixon/CBSH2-RTC/CMakeFiles/cbs.dir

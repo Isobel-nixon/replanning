@@ -1,7 +1,3 @@
-/build/
-/GPATH
-/GRTAGS
-/GTAGS
-*.d
-*.o
-*~
+.idea
+cmake-*
+bin
