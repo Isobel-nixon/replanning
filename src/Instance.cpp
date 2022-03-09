@@ -6,7 +6,7 @@
 
 int RANDOM_WALK_STEPS = 100000;
 
-Instance::Instance(const string& map_fname, const string& agent_fname, const string& delay_fname,
+Instance::Instance(const string& map_fname, const string& agent_fname, const string& delay_fname, const string& arrived_fname,
 	int num_of_agents, const string& agent_indices, 
 	int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents),  agent_indices(agent_indices), delay_fname(delay_fname)
@@ -53,6 +53,20 @@ Instance::Instance(const string& map_fname, const string& agent_fname, const str
 		else
 		{
 			cerr << "Delay file " << delay_fname << " not found." << endl;
+			exit(-1);
+		}
+	}
+
+	succ = loadArrivals();
+	if (!succ)
+	{
+		if (num_of_agents > 0)
+		{
+			generate_default_arrivals();
+		}
+		else
+		{
+			cerr << "Arrival file " << arrivals_fname << " not found." << endl;
 			exit(-1);
 		}
 	}
@@ -501,6 +515,36 @@ bool Instance::loadDelays(){
 	}
 	myfile.close();
 	return true;
+}
+
+
+bool Instance::loadArrivals(){
+	using namespace std;
+	using namespace boost;
+
+	string line;
+	ifstream myfile(arrivals_fname.c_str());
+	if (!myfile.is_open())
+		return false;
+
+	if (num_of_agents == 0)
+		{
+			cerr << "The number of agents should be larger than 0" << endl;
+			exit(-1);
+		}
+	arrivals.resize(num_of_agents);
+	for (int i = 0; i < num_of_agents; i++){
+		int arrival;
+		getline(myfile, line);
+		arrival = atoi(line.c_str());
+		arrivals[i] = arrival;
+	}
+	myfile.close();
+	return true;
+}
+
+void Instance::generate_default_arrivals(){
+	delays.resize(num_of_agents);
 }
 
 void Instance::generate_default_delays(){

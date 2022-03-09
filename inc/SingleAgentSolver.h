@@ -80,6 +80,7 @@ public:
 	int start_location;
 	int goal_location;
 	int delay;
+	int arrival;
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
 	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
 	{
@@ -103,6 +104,7 @@ public:
 		start_location(instance.start_locations[agent]),
 		goal_location(instance.goal_locations[agent]),
 		delay(instance.delays[agent])
+		arrival(instance.arrivals[agent])
 	{
 		compute_heuristics();
 	}

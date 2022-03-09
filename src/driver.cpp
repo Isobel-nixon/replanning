@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 		("stats", po::value<bool>()->default_value(false), "write to files some statistics")
 		("agentIdx", po::value<string>()->default_value(""), "customize the indices of the agents (e.g., \"0,1\")")
 		("delays,delays", po::value<string>()->required(), "input file for delays")
-		("startTime", po::value<int>()->default_value(0), "input file for delays")
+		("arrivedTimes", po::value<string>(), "input file for arrived_times")
 		// params for instance generators
 		("rows", po::value<int>()->default_value(0), "number of rows")
 		("cols", po::value<int>()->default_value(0), "number of columns")
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 	///////////////////////////////////////////////////////////////////////////
 	/// load the instance
     //////////////////////////////////////////////////////////////////////
-	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(), vm["delays"].as<string>(),
+	Instance instance(vm["map"].as<string>(), vm["agents"].as<string>(), vm["delays"].as<string>(), vm["arrivedTimes"].as<string>(),
 		vm["agentNum"].as<int>(), vm["agentIdx"].as<string>(),
 		vm["rows"].as<int>(), vm["cols"].as<int>(), vm["obs"].as<int>(), vm["warehouseWidth"].as<int>());
 

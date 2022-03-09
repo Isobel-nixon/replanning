@@ -389,7 +389,7 @@ bool CBS::findPathForSingleAgent(CBSNode* node, int ag, int lowerbound)
 	{
 		assert(!isSamePath(*paths[ag], new_path));
 		node->paths.emplace_back(ag, new_path);
-		node->g_val = node->g_val - (int) paths[ag]->size() + (int) new_path.size() + 1000; //add start time here?
+		node->g_val = node->g_val - (int) paths[ag]->size() + (int) new_path.size() + search_engines[ag]->arrival;
 		paths[ag] = &node->paths.back().second;
 		node->makespan = max(node->makespan, new_path.size() - 1);
 		return true;
