@@ -34,6 +34,7 @@ int main(int argc, char** argv)
 		("stats", po::value<bool>()->default_value(false), "write to files some statistics")
 		("agentIdx", po::value<string>()->default_value(""), "customize the indices of the agents (e.g., \"0,1\")")
 		("delays,delays", po::value<string>()->required(), "input file for delays")
+		("startTime", po::value<int>()->default_value(0), "input file for delays")
 		// params for instance generators
 		("rows", po::value<int>()->default_value(0), "number of rows")
 		("cols", po::value<int>()->default_value(0), "number of columns")

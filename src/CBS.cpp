@@ -389,7 +389,7 @@ bool CBS::findPathForSingleAgent(CBSNode* node, int ag, int lowerbound)
 	{
 		assert(!isSamePath(*paths[ag], new_path));
 		node->paths.emplace_back(ag, new_path);
-		node->g_val = node->g_val - (int) paths[ag]->size() + (int) new_path.size();
+		node->g_val = node->g_val - (int) paths[ag]->size() + (int) new_path.size() + 1000; //add start time here?
 		paths[ag] = &node->paths.back().second;
 		node->makespan = max(node->makespan, new_path.size() - 1);
 		return true;
@@ -822,7 +822,7 @@ bool CBS::solve(double _time_limit, int _cost_lowerbound, int _cost_upperbound)
 		if (curr->unknownConf.size() + curr->conflicts.size() == 0) //no conflicts
 		{// found a solution (and finish the while look)
 			solution_found = true;
-			solution_cost = curr->g_val;
+			solution_cost = curr->g_val; // - start time?
 			goal_node = curr;
 			break;
 		}
