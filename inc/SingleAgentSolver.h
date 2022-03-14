@@ -103,7 +103,7 @@ public:
 		instance(instance), //agent(agent), 
 		start_location(instance.start_locations[agent]),
 		goal_location(instance.goal_locations[agent]),
-		delay(instance.delays[agent])
+		delay(instance.delays[agent]),
 		arrival(instance.arrivals[agent])
 	{
 		compute_heuristics();

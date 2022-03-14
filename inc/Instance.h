@@ -12,7 +12,7 @@ public:
 	int map_size = 0;
 
 	Instance() = default;
-	Instance(const string& map_fname, const string& agent_fname, const string& delay_fname, const string& arrivals_fname
+	Instance(const string& map_fname, const string& agent_fname, const string& delay_fname, const string& arrivals_fname,
 		int num_of_agents = 0, const string& agent_indices = "",
 		int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
 
@@ -108,6 +108,7 @@ private:
 	  string agent_fname;
 	  string agent_indices;
 	  string delay_fname;
+	  string arrivals_fname;
 	  int num_of_agents = 0;
 	  vector<int> start_locations;
 	  vector<int> goal_locations;

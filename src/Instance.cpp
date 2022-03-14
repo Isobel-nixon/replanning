@@ -9,7 +9,7 @@ int RANDOM_WALK_STEPS = 100000;
 Instance::Instance(const string& map_fname, const string& agent_fname, const string& delay_fname, const string& arrived_fname,
 	int num_of_agents, const string& agent_indices, 
 	int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
-	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents),  agent_indices(agent_indices), delay_fname(delay_fname)
+	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents),  agent_indices(agent_indices), delay_fname(delay_fname), arrivals_fname(arrived_fname)
 {
 	bool succ = loadMap();
 	if (!succ)
@@ -541,6 +541,7 @@ bool Instance::loadArrivals(){
 	}
 	myfile.close();
 	return true;
+	// return false;
 }
 
 void Instance::generate_default_arrivals(){

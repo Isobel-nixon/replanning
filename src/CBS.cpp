@@ -1127,6 +1127,7 @@ CBS::CBS(const Instance& instance, bool sipp, int screen) :
 							   ConstraintTable(instance.num_of_cols, instance.map_size));
 
 	search_engines.resize(num_of_agents);
+	
 	for (int i = 0; i < num_of_agents; i++)
 	{
 		if (sipp)
